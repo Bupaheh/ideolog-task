@@ -1,17 +1,40 @@
 package ideologTask
 
+import com.apurebase.arkenv.Arkenv
+import com.apurebase.arkenv.util.argument
+import com.apurebase.arkenv.util.mainArgument
+import com.apurebase.arkenv.util.parse
 import java.io.File
 
-const val limit = 10
-const val threadNameColumn = 4
+object Parameters : Arkenv("ideolog-task") {
+    val limit: Int by argument("--limit", "-l") {
+        description = "Limit of output"
+        defaultValue = { 10 }
+    }
+
+    val column: Int by argument("--column", "-c") {
+        description = "Thread name column number"
+        defaultValue = { 4 }
+    }
+
+    val file: File? by mainArgument {
+        description = "Log file path"
+    }
+}
+
 
 fun main(args: Array <String>) {
-    if (args.isEmpty()) {
-        println("Empty arguments")
+    val params = Parameters.parse(args)
+    val limit = params.limit
+    val threadNameColumn = params.column
+    val file = params.file
+
+    if (params.help || file == null) {
+        println(params.toString())
         return
     }
 
-    File(args.first()).takeIf { it.exists() }?.run {
+    file.takeIf { it.exists() }?.run {
         readLines()
             .map { it.split("\t") }
             .filter { it.size > threadNameColumn }
