@@ -17,33 +17,41 @@ object Parameters : Arkenv("ideolog-task") {
         defaultValue = { 4 }
     }
 
+    val delimiters: String by argument("--delimiter", "-d") {
+        description = "Column delimiters"
+        defaultValue = { "\t" }
+    }
+
     val file: File? by mainArgument {
         description = "Log file path"
     }
 }
 
+fun getThreadToCountList(file: File, delimiters: String,
+                         threadNameColumn: Int, limit: Int) =
+    file.takeIf { it.exists() }?.run {
+    readLines()
+        .map { it.split(delimiters) }
+        .filter { it.size > threadNameColumn }
+        .map { it[threadNameColumn] }
+        .groupBy { it }
+        .mapValues { it.value.size }
+        .toList()
+        .sortedByDescending { it.second }
+        .take(limit)
+}
+
 
 fun main(args: Array <String>) {
-    val params = Parameters.parse(args)
-    val limit = params.limit
-    val threadNameColumn = params.column
-    val file = params.file
-
-    if (params.help || file == null) {
-        println(params.toString())
+    Parameters.parse(args)
+    if (Parameters.help || Parameters.file == null) {
+        println(Parameters.toString())
         return
     }
 
-    file.takeIf { it.exists() }?.run {
-        readLines()
-            .map { it.split("\t") }
-            .filter { it.size > threadNameColumn }
-            .map { it[threadNameColumn] }
-            .groupBy { it }
-            .mapValues { it.value.size }
-            .toList()
-            .sortedByDescending { it.second }
-            .take(limit)
-            .forEach { println("${it.first} ${it.second}") }
-    } ?: println("File doesn't exist")
+    Parameters.run {
+        getThreadToCountList(file!!, delimiters, column, limit)?.forEach {
+            println("${it.first} ${it.second} f")
+        } ?: println("File doesn't exist")
+    }
 }
