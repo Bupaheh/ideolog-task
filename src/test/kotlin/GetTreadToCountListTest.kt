@@ -14,7 +14,7 @@ internal class GetTreadToCountListTest {
     fun `sample test`() {
         val answer = File(answerFile).readLines()
         val result = getThreadToCountList(File(testFile), delimiters, column, limit)
-            ?.map { "${it.first} ${it.second.}" }
+            ?.map { "${it.first} ${it.second}" }
         assertEquals(answer, result)
     }
 }
